@@ -13,12 +13,14 @@ use crate::r#type::Type;
 /// [`Species`](struct.Species.html) is simply a data store containing 
 /// all the data defining the species.
 pub struct Species<'a> {
+    /// The [`Species`](struct.Species.html)' unique id.
+    pub id: u16,
     /// The name of the [`Species`](struct.Species.html).
     pub name: String,
     
     /// A vector of the [`Species`](struct.Species.html)' 
     /// [`Types`](../type/struct.Type.html).
-    pub types: Vec<&'a Type>,
+    pub types: Vec<&'a Type<'a>>,
     
     #[cfg(feature = "bestiary")]
     /// The species' category.

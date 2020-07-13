@@ -10,34 +10,29 @@
 //! [`Type`](struct.Type.html) objects should be used consistently.
 //!
 //! Note that you must escape this module's name to access it. For 
-//! example, the following must be done to use the 
+//! example, the following must be written to use the 
 //! [`Type`](struct.Type.html) definition:
 //!
 //! ```
 //! use monstermaker_core::r#type::Type;
 //! ```
 
-use hashable_rc::HashableWeak;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 
 /// A defined type.
 ///
 /// [`Types`](struct.Type.html) interact with each other through their 
 /// defined effectivenesses. [`Type`](struct.Type.html) effectiveness
-/// is stored using 
-/// [`Weak`](https://doc.rust-lang.org/std/rc/struct.Weak.html) 
-/// references within a [`Type`](struct.Type.html) to other 
+/// is stored using  the `name` attribute of other 
 /// [`Types`](struct.Type.html) which are effective against it. For 
 /// example:
 ///
 /// ```
 /// use monstermaker_core::r#type::Type;
-/// use std::rc::Rc;
 ///
-/// let foo = Rc::new(Type::new("foo".to_string()));
-/// let bar = Rc::new(Type::new("bar".to_string()));
+/// let foo = Type::new("foo");
+/// let bar = Type::new("bar");
 ///
 /// // Make bar have an effectiveness of 1.5 on foo.
 /// foo.add_effectiveness(&bar, 1.5);
@@ -45,47 +40,41 @@ use std::rc::Rc;
 /// assert_eq!(foo.effectiveness_of_type(&bar), 1.5);
 /// ```
 ///
-/// Note that, since
-/// [`Weak`](https://doc.rust-lang.org/std/rc/struct.Weak.html)
-/// references are used internally, a strong reference counting (using
-/// [`Rc`](https://doc.rust-lang.org/std/rc/struct.Rc.html)) must be
-/// kept to preserve the reference.
-/// [`Weak`](https://doc.rust-lang.org/std/rc/struct.Weak.html) 
-/// references are used internally to avoid circular ownership, such as
-/// in the case of a [`Type`](struct.Type.html) having effectiveness on 
-/// itself.
+/// Additionally, [`Type`](struct.Type.html) objects can define 
+/// effectiveness on themselves. To work around borrowing issues, 
+/// adding effectiveness does not require mutability. This allows the
+/// following example to work:
 ///
 /// ```
 /// use monstermaker_core::r#type::Type;
-/// use std::rc::Rc;
 ///
-/// let foo = Rc::new(Type::new("foo".to_string()));
+/// let foo = Type::new("foo");
 ///
 /// // Make foo have an effectiveness of 2.0 on itself.
 /// foo.add_effectiveness(&foo, 2.0);
 ///
 /// assert_eq!(foo.effectiveness_of_type(&foo), 2.0);
 /// ```
-pub struct Type {
+pub struct Type<'a> {
     /// The name of the [`Type`](struct.Type.html).
     ///
     /// Note that [`Type`](struct.Type.html) objects are not identified
     /// by their `name` attributes. They are instead identified by 
     /// their references.
-    pub name: String,
+    pub name: &'a str,
     
     // Access to effectivenesses is private to prevent direct access to
     // the mutable reference cell. Using a reference cell allows 
     // mutability of effectivenesses without having to worry about
     // maintaining mutability of the Types themselves.
-    effectivenesses: RefCell<HashMap<HashableWeak<Type>, f32>>,
+    effectivenesses: RefCell<HashMap<&'a str, f32>>,
 }
 
-impl Type {
+impl <'a> Type<'a> {
     /// Define a new [`Type`](struct.Type.html) object.
     ///
-    /// The `name` provided here does not have to be unique.
-    pub fn new(name: String) -> Type {
+    /// The `name` provided here should be unique.
+    pub fn new(name: &'a str) -> Type<'a> {
         Type {
             name: name,
             effectivenesses: RefCell::new(HashMap::new()),
@@ -98,13 +87,11 @@ impl Type {
     /// Note that, while this method does mutate the
     /// [`Type`](struct.Type.html) object, it does not require the
     /// [`Type`](struct.Type.html) object to be mutable. This allows 
-    /// for [`Weak`](https://doc.rust-lang.org/std/rc/struct.Weak.html) 
-    /// references to be stored without worry of mutable borrow 
-    /// checking.
-    pub fn add_effectiveness(&self, other: &Rc<Type>, effectiveness: f32) {
-        // TODO: consider marking as `unsafe`.
+    /// for effectiveness to be defined between a 
+    /// [`Type`](struct.Type.html) object and itself.
+    pub fn add_effectiveness(&self, other: &'a Type<'a>, effectiveness: f32) {
         self.effectivenesses.borrow_mut()
-                            .insert(HashableWeak::new(Rc::downgrade(&other)), effectiveness);
+                            .insert(&other.name, effectiveness);
     }
     
     /// Check the effectiveness of [`Type`](struct.Type.html) `other`
@@ -112,9 +99,9 @@ impl Type {
     ///
     /// If no effectiveness has been defined, a default value of `1.0`
     /// is returned.
-    pub fn effectiveness_of_type(&self, other: &Rc<Type>) -> f32 {
+    pub fn effectiveness_of_type(&self, other: &Type) -> f32 {
         self.effectivenesses.borrow()
-                            .get(&HashableWeak::new(Rc::downgrade(&other)))
+                            .get(&other.name)
                             .unwrap_or(&1.0)
                             .clone()
     }
@@ -123,12 +110,11 @@ impl Type {
 #[cfg(test)]
 mod tests {
     use crate::r#type::Type;
-    use std::rc::Rc;
     
     #[test]
     fn test_returns_effectiveness() {
-        let type1 = Rc::new(Type::new("type1".to_string()));
-        let type2 = Rc::new(Type::new("type2".to_string()));
+        let type1 = Type::new("type1");
+        let type2 = Type::new("type2");
         type1.add_effectiveness(&type2, 2.0);
         type2.add_effectiveness(&type1, 0.5);
         
@@ -138,19 +124,33 @@ mod tests {
     
     #[test]
     fn test_no_effectiveness_returns_default() {
-        let type1 = Rc::new(Type::new("type1".to_string()));
-        let type2 = Rc::new(Type::new("type2".to_string()));
+        let type1 = Type::new("type1");
+        let type2 = Type::new("type2");
         
         assert_eq!(type1.effectiveness_of_type(&type2), 1.0);
     }
     
     #[test]
     fn test_effectiveness_of_own_type() {
-        // Type objects should support containing weak references to 
-        // themselves as effectiveness keys.
-        let only_type = Rc::new(Type::new("only type".to_string()));
+        // Type objects should support assigning effectiveness on 
+        // themselves.
+        let only_type = Type::new("only type");
         only_type.add_effectiveness(&only_type, 2.0);
         
         assert_eq!(only_type.effectiveness_of_type(&only_type), 2.0);
+    }
+    
+    #[test]
+    fn test_duplicate_names() {
+        // Defining two types with the same name.
+        let type1 = Type::new("type1");
+        let type2 = Type::new("type1");
+        type1.add_effectiveness(&type1, 2.0);
+        type1.add_effectiveness(&type2, 0.5);
+        
+        // The latter .add_effectiveness() call should overwrite the 
+        // former.
+        assert_ne!(type1.effectiveness_of_type(&type1), 2.0);
+        assert_eq!(type1.effectiveness_of_type(&type2), 0.5);
     }
 }
