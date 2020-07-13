@@ -7,8 +7,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e28bd3b39eac718b37cb313fe83fd2ce7d9b44c9606b60562b54213764091da2"
 
 [[package]]
-name = "monster_maker_core"
-version = "0.1.2"
+name = "monstermaker_core"
+version = "0.1.0"
 dependencies = [
  "hashable_rc",
 ]

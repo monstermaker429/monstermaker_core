@@ -1,12 +1,16 @@
 [package]
 name = "monstermaker_core"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["The Monster Maker Team"]
 edition = "2018"
 license = "MIT"
 repository = "https://github.com/monstermaker429/monstermaker_core"
 readme = "README.md"
 description = "Core types for the Monster Maker ecosystem."
+
+[features]
+default = ["bestiary"]
+bestiary = []
 
 [dependencies]
 hashable_rc = "0.1.2"

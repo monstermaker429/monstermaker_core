@@ -20,6 +20,19 @@ pub struct Species<'a> {
     /// [`Types`](../type/struct.Type.html).
     pub types: Vec<&'a Type>,
     
+    #[cfg(feature = "bestiary")]
+    /// The species' category.
+    pub category: String,
+    #[cfg(feature = "bestiary")]
+    /// A description of the species.
+    pub description: String,
+    #[cfg(feature = "bestiary")]
+    /// The species' weight in hectograms.
+    pub weight_in_hectograms: u16,
+    #[cfg(feature = "bestiary")]
+    /// The species' height in decimeters.
+    pub height_in_decimeters: u16,
+    
     // TODO: Continue expanding the features.
     /*
     base_hp: u8,

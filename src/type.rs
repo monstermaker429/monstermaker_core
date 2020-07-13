@@ -14,7 +14,7 @@
 //! [`Type`](struct.Type.html) definition:
 //!
 //! ```
-//! use monster_maker_core::r#type::Type;
+//! use monstermaker_core::r#type::Type;
 //! ```
 
 use hashable_rc::HashableWeak;
@@ -33,7 +33,7 @@ use std::rc::Rc;
 /// example:
 ///
 /// ```
-/// use monster_maker_core::r#type::Type;
+/// use monstermaker_core::r#type::Type;
 /// use std::rc::Rc;
 ///
 /// let foo = Rc::new(Type::new("foo".to_string()));
@@ -56,7 +56,7 @@ use std::rc::Rc;
 /// itself.
 ///
 /// ```
-/// use monster_maker_core::r#type::Type;
+/// use monstermaker_core::r#type::Type;
 /// use std::rc::Rc;
 ///
 /// let foo = Rc::new(Type::new("foo".to_string()));
