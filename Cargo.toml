@@ -1,6 +1,6 @@
 [package]
 name = "monstermaker_core"
-version = "2.0.0"
+version = "2.0.1"
 authors = ["The Monster Maker Team"]
 edition = "2018"
 license = "MIT"

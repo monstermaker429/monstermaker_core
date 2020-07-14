@@ -16,7 +16,7 @@ pub struct Species {
     /// The [`Species`](struct.Species.html)' unique id.
     pub id: u16,
     /// The name of the [`Species`](struct.Species.html).
-    pub name: String,
+    pub name: &'static str,
     
     /// A vector of the [`Species`](struct.Species.html)' 
     /// [`Types`](../type/struct.Type.html).
@@ -24,10 +24,10 @@ pub struct Species {
     
     #[cfg(feature = "bestiary")]
     /// The species' category.
-    pub category: String,
+    pub category: &'static str,
     #[cfg(feature = "bestiary")]
     /// A description of the species.
-    pub description: String,
+    pub description: &'static str,
     #[cfg(feature = "bestiary")]
     /// The species' weight in hectograms.
     pub weight_in_hectograms: u16,

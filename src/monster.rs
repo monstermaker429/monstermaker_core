@@ -12,7 +12,7 @@ use crate::species::Species;
 /// An individual monster.
 pub struct Monster {
     /// The [`Monster`](struct.Monster.html)'s name.
-    pub name: String,
+    pub name: &'static str,
     /// A reference to the [`Monster`](struct.Monster.html)'s Species.
     pub species: &'static Species,
 }
